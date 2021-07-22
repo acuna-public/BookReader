@@ -1,4 +1,4 @@
-	package pro.acuna.bookreader;
+	package ru.ointeractive.bookreader;
 	/*
 	 Created by Acuna on 23.07.2018
 	*/
@@ -8,11 +8,10 @@
 	import java.io.InputStream;
 	import java.util.ArrayList;
 	import java.util.List;
-	
-	import pro.acuna.bookreader.providers.EPub;
-	import pro.acuna.jabadaba.Arrays;
-	import pro.acuna.jabadaba.Files;
-	import pro.acuna.jabadaba.Streams;
+  
+	import ru.ointeractive.bookreader.providers.EPub;
+	import ru.ointeractive.jabadaba.Arrays;
+	import ru.ointeractive.jabadaba.Files;
 	
 	public class BookReader {
 		
@@ -72,22 +71,26 @@
 		}
 		
 		public Book open (File file) throws BookReaderException {
-			
-			try {
-				return open (Streams.toInputStream (file), Files.getExtension (file));
-			} catch (IOException e) {
-				throw new BookReaderException (e);
-			}
-			
+			return open (file, Files.getExtension (file));
 		}
-		
-		public Book open (InputStream stream, String type) throws BookReaderException {
+    
+    public Book open (InputStream stream, File file) throws BookReaderException {
+      
+      try {
+        return open (Files.toFile (stream, file), Files.getExtension (file));
+      } catch (IOException e) {
+        throw new BookReaderException (e);
+      }
+      
+    }
+    
+    public Book open (File file, String type) throws BookReaderException {
 			
 			if (plugin == null) plugin = getPlugin (type);
 			
 			plugin = plugin.getInstance (this);
 			
-			return plugin.open (stream, type);
+			return plugin.open (file);
 			
 		}
 		

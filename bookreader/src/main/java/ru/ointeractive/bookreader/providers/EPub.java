@@ -1,6 +1,6 @@
-	package pro.acuna.bookreader.providers;
+	package ru.ointeractive.bookreader.providers;
 	/*
-	 Created by Acuna on 23.07.2018.
+	 Created by Acuna on 23.07.2018
 	*/
 	
 	import org.jsoup.nodes.Attribute;
@@ -8,23 +8,23 @@
 	import org.jsoup.nodes.Element;
 	import org.jsoup.nodes.Node;
 	import org.jsoup.select.NodeVisitor;
-	
-	import java.io.InputStream;
+  
+  import java.io.File;
 	import java.util.ArrayList;
 	import java.util.HashMap;
 	import java.util.List;
 	import java.util.Map;
 	
-	import pro.acuna.archiver.Archiver;
-	import pro.acuna.bookreader.Book;
-	import pro.acuna.bookreader.BookReader;
-	import pro.acuna.bookreader.BookReaderException;
-	import pro.acuna.jabadaba.Arrays;
-	import pro.acuna.jabadaba.Files;
-	import pro.acuna.jabadaba.Int;
-  import pro.acuna.jabadaba.Net;
+	import ru.ointeractive.archiver.Archiver;
+	import ru.ointeractive.bookreader.Book;
+	import ru.ointeractive.bookreader.BookReader;
+	import ru.ointeractive.bookreader.BookReaderException;
+	import ru.ointeractive.jabadaba.Arrays;
+	import ru.ointeractive.jabadaba.Files;
+	import ru.ointeractive.jabadaba.Int;
+  import ru.ointeractive.jabadaba.Net;
   
-	public class EPub extends Book {
+  public class EPub extends Book {
 		
 		private static final String FILE_MIMETYPE = "mimetype";
 		private static final String FILE_CONTAINER = "META-INF/container.xml";
@@ -55,11 +55,11 @@
 		}
 		
 		@Override
-		public Book open (InputStream stream, String type) throws BookReaderException {
+		public Book open (File file) throws BookReaderException {
 			
 			try {
 				
-				archiver = archiver.open (stream, type);
+				archiver = archiver.open (file);
 				xmlReader = Net.toHTML (getEntry (FILE_CONTAINER));
 				
 				data = xmlReader.select ("rootfiles").get (0);
@@ -67,7 +67,7 @@
 				
 				contentReader = Net.toHTML (getEntry (data.attr ("full-path"))); // content.opf
 				contentPath = Files.getPath (data.attr ("full-path"));
-				
+    
 			} catch (Archiver.DecompressException e) {
 				throw new BookReaderException (e);
 			}
@@ -82,20 +82,20 @@
 			Element data = contentReader.select ("spine").get (0);
 			Element data2 = contentReader.select ("manifest").get (0);
 			
-			List<Chapter> items = new ArrayList<> ();
+			List<Chapter> chapters = new ArrayList<> ();
 			
 			for (Element elem2 : data.select ("itemref")) {
 				
 				if (!elem2.attr ("linear").equals ("no")) { // Тега может не быть вообще
 					
 					elem2 = data2.select ("#" + elem2.attr ("idref")).get (0);
-					items.add (getSection (elem2.attr ("href")));
+					chapters.add (getSection (elem2.attr ("href")));
 					
 				}
 				
 			}
 			
-			return items;
+			return chapters;
 			
 		}
 		
@@ -161,9 +161,14 @@
 			
 			@Override
 			public String getCover () throws BookReaderException {
-				return getEntry (contentPath, getFiles (getMeta ("cover"), "id").get (0));
+				return getContentEntry (getFiles (getMeta ("cover"), "id").get (0));
 			}
 			
+		}
+		
+		@Override
+		public String[] contentEntryName (String name) {
+			return new String[] {contentPath, name};
 		}
 		
 		@Override
@@ -173,13 +178,13 @@
 		
 		private class Section extends Chapter {
 			
-			private Element elem, head, content;
+			private Element head, content;
 			private String entry;
 			
 			private Section (String entry) throws BookReaderException {
 				
 				this.entry = entry;
-				elem = Net.toHTML (getEntry (contentPath, entry));
+				Element elem = Net.toHTML (getContentEntry (entry));
 				
 				head = elem.select ("head").get (0);
 				content = elem.select ("body").get (0);
@@ -197,17 +202,17 @@
 			@Override
 			public String getCSS () throws BookReaderException {
 				
-				String css = "";
+				StringBuilder css = new StringBuilder ();
 				List<Map<String, String>> tags = getObject (head, "link");
 				
 				for (Map<String, String> tag : tags) {
 					
 					if (tag.get ("type").equals ("text/css"))
-						css += getEntry (contentPath, tag.get ("href"));
+						css.append (getContentEntry (tag.get ("href")));
 					
 				}
 				
-				return css;
+				return css.toString ();
 				
 			}
 			
@@ -235,7 +240,7 @@
 			private TOC () throws BookReaderException {
 				
 				String file = getFiles (TYPE_TOC).get (0);
-				elem = Net.toHTML (getEntry (contentPath, file));
+				elem = Net.toHTML (getContentEntry (file));
 				
 			}
 			

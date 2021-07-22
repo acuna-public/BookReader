@@ -1,14 +1,14 @@
-	package pro.acuna.bookreader.providers;
+	package ru.ointeractive.bookreader.providers;
 	/*
-	 Created by Acuna on 28.07.2018.
+	 Created by Acuna on 28.07.2018
 	*/
 	
-	import java.io.InputStream;
+	import java.io.File;
 	import java.util.List;
 	
-	import pro.acuna.bookreader.Book;
-	import pro.acuna.bookreader.BookReader;
-	import pro.acuna.bookreader.BookReaderException;
+	import ru.ointeractive.bookreader.Book;
+	import ru.ointeractive.bookreader.BookReader;
+	import ru.ointeractive.bookreader.BookReaderException;
 	
 	public class Stub extends Book {
 		
@@ -27,7 +27,7 @@
 		}
 		
 		@Override
-		public Book open (InputStream string, String type) throws BookReaderException {
+		public Book open (File file) throws BookReaderException {
 			return null;
 		}
 		

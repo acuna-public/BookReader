@@ -1,15 +1,16 @@
-	package pro.acuna.bookreader;
+	package ru.ointeractive.bookreader;
 	/*
 	 Created by Acuna on 23.07.2018
 	*/
 	
 	import org.jsoup.nodes.Element;
-	
+  
+  import java.io.File;
 	import java.io.InputStream;
 	import java.util.List;
 	
-	import pro.acuna.archiver.Archiver;
-	import pro.acuna.jabadaba.exceptions.OutOfMemoryException;
+	import ru.ointeractive.archiver.Archiver;
+  import ru.ointeractive.jabadaba.exceptions.OutOfMemoryException;
 	
 	public abstract class Book {
 		
@@ -25,19 +26,44 @@
 			
 		}
 		
-		protected String getEntry (String... file) throws BookReaderException {
+		public String getEntry (String... file) throws BookReaderException {
 			
 			try {
 				return archiver.getEntry (file);
-			} catch (Archiver.DecompressException | OutOfMemoryException e) {
-				throw new BookReaderException (e);
+			} catch (Archiver.DecompressException e) {
+				throw new BookReaderException ("Entry " + e.getEntry () + " not found");
+			} catch (OutOfMemoryException e) {
+        throw new BookReaderException (e);
+      }
+			
+		}
+		
+		public String[] contentEntryName (String name) {
+			return new String[] { name };
+		}
+		
+		public String getContentEntry (String file) throws BookReaderException {
+			return getEntry (contentEntryName (file));
+		}
+		
+		public InputStream getEntryStream (String... file) throws BookReaderException {
+			
+			try {
+				return archiver.getEntryStream (file);
+			} catch (Archiver.DecompressException e) {
+				throw new BookReaderException ("Entry " + e.getEntry () + " not found");
 			}
 			
 		}
 		
+		public InputStream getContentEntryStream (String file) throws BookReaderException {
+			return getEntryStream (contentEntryName (file));
+		}
+		
 		public abstract Book getInstance (BookReader reader) throws BookReaderException;
 		public abstract String[] setFormats ();
-		public abstract Book open (InputStream stream, String type) throws BookReaderException;
+  
+		public abstract Book open (File file) throws BookReaderException;
 		public abstract String getMimeType () throws BookReaderException;
 		
 		public abstract Metadata getMetadata () throws BookReaderException;
@@ -45,7 +71,7 @@
 		public abstract List<Chapter> getChapters () throws BookReaderException;
 		public abstract Chapter getSection (String entry) throws BookReaderException;
 		
-		public abstract class Metadata {
+		public abstract static class Metadata {
 			
 			public abstract String getTitle () throws BookReaderException;
 			public abstract List<String> getAuthors () throws BookReaderException;
@@ -60,12 +86,12 @@
 			
 		}
 		
-		public abstract class TOC {
+		public abstract static class TOC {
 			
 			public abstract String getTitle () throws BookReaderException;
 			public abstract List<Item> getItems () throws BookReaderException;
 			
-			public abstract class Item {
+			public abstract static class Item {
 				
 				public abstract String getTitle () throws BookReaderException;
 				public abstract int getLevel () throws BookReaderException;
@@ -74,7 +100,7 @@
 			
 		}
 		
-		public abstract class Chapter {
+		public abstract static class Chapter {
 			
 			public abstract String getTitle () throws BookReaderException;
 			public abstract String getCSS () throws BookReaderException;
